@@ -141,24 +141,58 @@
 
   const ptsOf = (r, id) => (r.id1 === id ? r.p1 : r.id2 === id ? r.p2 : null);
 
-  // Keep a talisman unless another one in the list with the same two skills has at least its points
-  // and slots and beats it somewhere. Different talisman names alone don't count as better.
+  // Best rolls only: drop a talisman when another in the list beats it. The other one needs at least
+  // as many slots and at least as many points in every skill either of them has, a missing skill
+  // counting as 0, and must be better somewhere. So a negative skill loses to not having it (Raven,
+  // 2026-10-28). Different talisman names alone don't count as better.
+  //
+  // Skill 1 always has positive points, so a winner has that skill too. Per skill, the rows that have
+  // it are kept two ways:
+  // - by their other skill, for winners with the same second skill (short lists, scanned);
+  // - as one list of rows whose other skill isn't negative, best points first, with the best points
+  //   at each slot count. That answers "has more of this skill, at least these slots, nothing
+  //   negative" in one look.
   function bestOnly(rows) {
-    const groups = new Map();
-    for (const r of rows) {
-      const k = r.id1 + "," + r.id2;
-      if (!groups.has(k)) groups.set(k, []);
-      groups.get(k).push(r);
-    }
-    const out = [];
-    for (const g of groups.values()) {
-      for (const r of g) {
-        const beaten = g.some(o => o.p1 >= r.p1 && o.p2 >= r.p2 && o.slots >= r.slots &&
-          (o.p1 > r.p1 || o.p2 > r.p2 || o.slots > r.slots));
-        if (!beaten) out.push(r);
+    const bySkill = new Map();
+    const entry = (id) => {
+      let e = bySkill.get(id);
+      if (!e) bySkill.set(id, (e = { pairs: new Map(), clean: [], top: [-99, -99, -99, -99] }));
+      return e;
+    };
+    const add = (id, r, p, oid, op) => {
+      const e = entry(id), x = { r, p, oid, op, slots: r.slots };
+      if (!e.pairs.has(oid)) e.pairs.set(oid, []);
+      e.pairs.get(oid).push(x);
+      if (!oid || op >= 0) {
+        e.clean.push(x);
+        for (let k = 0; k <= r.slots; k++) if (p > e.top[k]) e.top[k] = p;
       }
+    };
+    for (const r of rows) {
+      add(r.id1, r, r.p1, r.id2, r.p2);
+      if (r.id2) add(r.id2, r, r.p2, r.id1, r.p1);
     }
-    return out;
+    for (const e of bySkill.values()) e.clean.sort((x, y) => y.p - x.p);
+
+    const beaten = (b) => {
+      const { p1, id2, p2, slots } = b, e = bySkill.get(b.id1);
+      // A winner with the same second skill (or, with none, also none).
+      for (const x of e.pairs.get(id2) || []) {
+        if (x.r === b || x.p < p1 || x.slots < slots || x.op < p2) continue;
+        if (x.p > p1 || x.slots > slots || x.op > p2) return true;
+      }
+      if (id2 && p2 > 0) return false;  // anything else lacks this one's positive second skill
+      // A winner whose other skill isn't negative: lacking a negative skill, or having a positive one, is better.
+      if (e.top[slots] < p1) return false;
+      if (e.top[slots] > p1 || p2 < 0) return true;
+      for (const x of e.clean) {        // same points in skill 1: needs more slots or a positive extra
+        if (x.p < p1) break;
+        if (x.r === b || x.slots < slots) continue;
+        if (x.slots > slots || x.op > 0) return true;
+      }
+      return false;
+    };
+    return rows.filter(r => !beaten(r));
   }
 
   function sortRows(rows, f) {
