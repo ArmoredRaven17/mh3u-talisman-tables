@@ -180,15 +180,19 @@
     card.replaceChildren();
     if (!t) {
       card.append(el("h2", null, "All tables"));
-      card.append(el("p", null, fmt(rows.length) + " different talismans across all 17 tables. " +
-        "The Tables column shows which tables can give each one."));
+      const rolls = E.TABLES.reduce((n, tb) => n + tb.total, 0);
+      card.append(el("p", null, fmt(rolls) + " rolls across all 17 tables, which come out as " + fmt(rows.length) +
+        " different talismans. The Tables column shows which tables can give each one."));
     } else {
       const h = el("h2", null, "Table " + t.num);
       h.append(el("span", "badge " + (t.cursed ? "cursed" : "safe"), t.cursed ? "CURSED" : "NORMAL"));
       card.append(h);
+      // Rolls = every charm from every point on the table; many rolls give the same talisman.
       card.append(el("p", null, t.cursed
-        ? "A cursed table: only " + fmt(rows.length) + " different talismans, against about 12,900 on a normal table."
-        : fmt(rows.length) + " different talismans can come out of the four charms on this table."));
+        ? "A cursed table: only " + fmt(t.total) + " rolls, which come out as " + fmt(rows.length) +
+          " different talismans. A normal table has 21,600 rolls and about 12,900 different talismans."
+        : fmt(t.total) + " rolls across the four charms, which come out as " + fmt(rows.length) +
+          " different talismans, since many rolls give the same one."));
     }
     const counts = el("div", "charm-counts");
     D.charms.forEach((c, i) => {
