@@ -182,17 +182,18 @@
       card.append(el("h2", null, "All tables"));
       const rolls = E.TABLES.reduce((n, tb) => n + tb.total, 0);
       card.append(el("p", null, fmt(rolls) + " rolls across all 17 tables, which come out as " + fmt(rows.length) +
-        " different talismans. The Tables column shows which tables can give each one."));
+        " different talismans."));
+      card.append(el("p", null, "The Tables column shows which tables can give each one."));
     } else {
       const h = el("h2", null, "Table " + t.num);
       h.append(el("span", "badge " + (t.cursed ? "cursed" : "safe"), t.cursed ? "CURSED" : "NORMAL"));
       card.append(h);
       // Rolls = every charm from every point on the table; many rolls give the same talisman.
       card.append(el("p", null, t.cursed
-        ? "A cursed table: only " + fmt(t.total) + " rolls, which come out as " + fmt(rows.length) +
-          " different talismans. A normal table has 21,600 rolls and about 12,900 different talismans."
+        ? "A cursed table: only " + fmt(t.total) + " rolls, which come out as " + fmt(rows.length) + " different talismans."
         : fmt(t.total) + " rolls across the four charms, which come out as " + fmt(rows.length) +
           " different talismans, since many rolls give the same one."));
+      if (t.cursed) card.append(el("p", null, "A normal table has 21,600 rolls and about 12,900 different talismans."));
     }
     const counts = el("div", "charm-counts");
     D.charms.forEach((c, i) => {
@@ -255,6 +256,82 @@
   }
   $("moreBtn").addEventListener("click", () => { shown += PAGE; drawRows(); });
 
+  // ── Your Save ────────────────────────────────────────────────────────────
+  // The file is read and changed here in the browser (save.js); nothing is uploaded or stored.
+  let save = null;
+  const show = (id, on) => $(id).classList.toggle("hidden", !on);
+  for (const t of E.TABLES) $("moveTo").append(new Option("T" + t.num + (t.cursed ? " (cursed)" : ""), t.num));
+
+  function renderSave() {
+    show("saveInfo", !!save);
+    const own = save ? save.table().num : 0;
+    for (const [num, b] of Object.entries(SQUARES)) b.classList.toggle("own", +num === own);
+    if (!save) return;
+    const t = save.table();
+    $("saveBadge").className = "badge " + (t.cursed ? "cursed" : "safe");
+    $("saveBadge").textContent = "T" + t.num;
+    $("saveName").textContent = (save.fileName || "Your save") + " · " + (save.platform === "wiiu" ? "Wii U" : "3DS");
+    $("saveNote").textContent = t.cursed
+      ? "This save is on a cursed table: its charms can only turn into " + fmt(t.rows.length) +
+        " different talismans. Move it to a normal table below."
+      : "This save is on a normal table. The game picked it when the hunter was created and never changes it.";
+    $("saveWarn").textContent = save.warnings.join(" ");
+    show("saveWarn", save.warnings.length > 0);
+    $("moveBtn").disabled = +$("moveTo").value === t.num;
+  }
+
+  $("openSaveBtn").addEventListener("click", () => $("saveFile").click());
+  $("saveFile").addEventListener("change", async () => {
+    const file = $("saveFile").files[0];
+    $("saveFile").value = "";   // so the same file can be opened again
+    if (!file) return;
+    show("moveDone", false);
+    try {
+      save = MH3U_SAVE.open(new Uint8Array(await file.arrayBuffer()), file.name);
+      show("saveErr", false);
+    } catch (e) {
+      save = null;
+      $("saveErr").textContent = e.message;
+      show("saveErr", true);
+    }
+    if (save) {
+      const num = save.table().num;
+      $("moveTo").value = num;
+      prefs.f.table = num;          // show the save's own table
+      $("fTable").value = num;
+      savePrefs(); shown = PAGE; renderBrowse();
+    }
+    renderSave();
+  });
+  $("moveTo").addEventListener("change", () => { show("moveDone", false); renderSave(); });
+
+  function downloadMoved() {
+    const num = +$("moveTo").value, name = save.fileName || "user1";
+    const out = save.movedTo(num);
+    const a = el("a");
+    a.href = URL.createObjectURL(new Blob([out], { type: "application/octet-stream" }));
+    a.download = name;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    save = MH3U_SAVE.open(out, name);   // the panel now describes the downloaded file
+    $("moveDone").textContent = "Downloaded " + name + ", now on T" + num + ". Put it in your save folder in place of " +
+      "the old one (keep a copy of the original). If your browser renamed it, for example to \"" + name +
+      " (1)\", rename it back to " + name + " first.";
+    show("moveDone", true);
+    renderSave();
+  }
+  $("moveBtn").addEventListener("click", () => {
+    const t = byNum[+$("moveTo").value];
+    if (!save || !t) return;
+    if (!t.cursed) return downloadMoved();
+    $("cursedText").textContent = "T" + t.num + " is a cursed table: its charms can only turn into " + fmt(t.rows.length) +
+      " different talismans. Move this save there anyway?";
+    show("cursedModal", true);
+  });
+  $("cursedOk").addEventListener("click", () => { show("cursedModal", false); downloadMoved(); });
+
   // ── Panels and modals ────────────────────────────────────────────────────
   document.querySelectorAll(".panel-head").forEach(h => h.addEventListener("click", () => {
     const p = h.parentElement;
@@ -269,6 +346,7 @@
   modal("linksBtn", "linksModal", "linksClose");
   modal("aboutBtn", "aboutModal", "aboutClose");
   modal("themeBtn", "themeModal", "themeClose");
+  modal(null, "cursedModal", "cursedCancel");
 
   // ── Theme ────────────────────────────────────────────────────────────────
   // Palette and LEGACY_HEX: the MH3U apps' shared copy (the Hunting Log's). Same 31 hexes as the

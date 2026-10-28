@@ -7,7 +7,7 @@
 <title>MH3U Talisman Tables</title>
 <link rel="icon" href="assets/MonsterIcons/MH3U-Question_Mark_Icon.png">
 <!-- Bump ?v= on any styles/data/engine/app change so browsers fetch fresh copies (no hard-refresh needed) -->
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 <div id="app">
@@ -22,6 +22,24 @@
 
   <main class="layout">
     <aside class="sidebar">
+      <section id="savePanel" class="panel" data-open="true">
+        <button class="panel-head">Your Save <span class="chev">&#9662;</span></button>
+        <div class="panel-body">
+          <p class="hint">Open a hunter file (user1, user2 or user3) from your Wii U or 3DS to see which table it's on. The file never leaves your device.</p>
+          <button id="openSaveBtn" class="btn tiny">Open Save File</button>
+          <input type="file" id="saveFile" hidden>
+          <p id="saveErr" class="err hidden"></p>
+          <div id="saveInfo" class="save-info hidden">
+            <div class="save-now"><span id="saveBadge" class="badge"></span><span id="saveName"></span></div>
+            <p id="saveNote" class="hint"></p>
+            <p id="saveWarn" class="err hidden"></p>
+            <label class="field">Move this save to<select id="moveTo"></select></label>
+            <button id="moveBtn" class="btn tiny">Download Changed Save</button>
+            <p id="moveDone" class="hint hidden"></p>
+          </div>
+        </div>
+      </section>
+
       <section id="browsePanel" class="panel" data-open="true">
         <button class="panel-head">Filters <span class="chev">&#9662;</span></button>
         <div class="panel-body">
@@ -80,9 +98,25 @@
       and go dark for the rest. Click a square to show that table, and click it again to go back to All tables.</p>
     <p>To find your own table, set the filters to one of your talismans and note the lit squares. Do it for a few
       talismans; the table lit every time is yours.</p>
+    <p><strong>Your Save:</strong> or open your hunter file (user1, user2 or user3) and the app tells you straight away.
+      Your table's square gets a gold bar. To move the save to another table, pick one and download the changed
+      file, then put it back in your save folder in place of the old one. Keep a copy of the original first.
+      Only the table changes; your hunter, items and talismans stay as they are.</p>
     <p>Mystery Charms never have a second skill, and only Timeworn and Enduring Charms can have 3 slots.</p>
     <p class="muted">Theme and filters are saved in this browser.</p>
     <div class="row end gap"><button id="helpClose" class="btn">Close</button></div>
+  </div>
+</div>
+
+<!-- Move to a cursed table confirmation -->
+<div id="cursedModal" class="modal hidden">
+  <div class="modal-card narrow">
+    <h2>Move to a cursed table?</h2>
+    <p id="cursedText"></p>
+    <div class="row end gap">
+      <button id="cursedCancel" class="btn">Cancel</button>
+      <button id="cursedOk" class="btn accent">Move Anyway</button>
+    </div>
   </div>
 </div>
 
@@ -151,8 +185,8 @@
     <p><strong>Checked against a real save.</strong> All 258 talismans in a long-played save are on that save's
       table, down to the slots and the talisman name.</p>
     <p><strong>Table numbers.</strong> These are the community's numbers, matched with the 13 published New Game
-      times. Nobody published times for T12, T15, T16 and T17, so those four are numbered by convention, the same way
-      as in the MH3U Cursed Table app.</p>
+      times. Nobody published times for T12, T15, T16 and T17, so those four follow Athena's ASS, the same as the
+      MH3U Save Editor.</p>
     <p class="muted">Background from the GameFAQs, Neoseeker and MH Wiki charm-table threads.</p>
     <hr class="modal-divider">
     <p class="muted">Monster Hunter 3 Ultimate and all of its names and icons are &copy; CAPCOM CO., LTD. Nothing from the
@@ -174,7 +208,8 @@
 </div>
 
 <script src="data.js?v=1"></script>
-<script src="engine.js?v=1"></script>
-<script src="app.js?v=6"></script>
+<script src="engine.js?v=2"></script>
+<script src="save.js?v=2"></script>
+<script src="app.js?v=8"></script>
 </body>
 </html>

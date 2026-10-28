@@ -185,6 +185,13 @@ body{
 .tsq.sel{outline:2px solid var(--accent-hover);outline-offset:1px}
 .tsq:hover{filter:brightness(1.25)}
 
+.tsq.own{box-shadow:inset 0 -5px 0 #e8b931}
+
+/* Your Save */
+.save-info{display:flex;flex-direction:column;gap:6px}
+.save-now{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px}
+.err{color:#ff8a99;font-size:13px;margin:4px 0;line-height:1.4}
+
 /* Talisman list */
 .list-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;opacity:.85}
 .tal-table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}

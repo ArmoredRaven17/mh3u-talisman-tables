@@ -13,6 +13,13 @@ shows that table. There is no separate "find" mode: Raven folded it into the bro
 No build step, no framework, no modules.
 - `docs/data.js` is generated; never hand-edit it.
 - `docs/engine.js` is the game's generator (no DOM).
+- `docs/save.js` reads a hunter save's table and writes a copy moved to another table (no DOM).
+  It is ported from the MH3U save editor (`mh3u-editor/src/core/save.ts`, `charm.ts`):
+  - Wii U files are 0x8a24 bytes, big-endian, behind a wrapper whose name key is ~crc32(file name).
+  - 3DS files are 0x8a00 bytes, little-endian.
+  - There is no checksum.
+  - The table is RNG slot 1 at block 0x56c8. Moving a save writes all 32 seed words, as the editor does.
+  - Test it with `node C:\MH3U-Extract\talismans\check_save_js.js docs "<save folder>"`.
 - `docs/app.js` is one IIFE (UI, prefs, theme).
 - `docs/styles.css` is hand-written.
 
@@ -26,8 +33,8 @@ It is the game's own logic, decoded from the 3DS executable. Notes with addresse
 
 - Tables = the 17 cycles of the charm RNG `x -> (x || 1) * 176 mod 65363`. A table's talismans
   are each charm's roll from each state on its cycle.
-- `NAMED` (cycle id -> table number) is the Cursed Table app's mapping. T12/T15/T16/T17 are
-  numbered by convention: Raven's call, 2026-10-06.
+- `NAMED` (cycle id -> table number) follows Athena's ASS, as the MH3U save editor does: cycle
+  401 = T12, 489 = T15 (Raven, 2026-10-28). The Cursed Table app still has those two swapped.
 - Scores are float32 in the game; keep `Math.fround` on every float step.
 - Regenerate data: `python C:\MH3U-Extract\talismans\build_data.py`.
 - Check after any engine/data change:

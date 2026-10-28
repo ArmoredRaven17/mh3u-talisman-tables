@@ -24,10 +24,11 @@
   }
   CYCLE[0] = 1;   // a zero state steps as 1
 
-  // Cycle id -> the community's table number (the Cursed Table app's mapping, checked against all
-  // 13 community New Game times). T12 and T15-T17 are numbered by convention: nobody published times.
-  const NAMED = { 1: 1, 15: 2, 5: 3, 13: 4, 4: 5, 3: 6, 9: 7, 12: 8, 26: 9, 18: 10, 163: 11, 6: 13, 2: 14,
-    489: 12, 401: 15, 802: 16, 1203: 17 };
+  // Cycle id -> the community's table number, as Athena's ASS numbers them (the MH3U save editor uses
+  // the same map). The 13 published New Game times agree; T12 is the 54-long cycle 401 and T15 the
+  // 200-long 489 (Raven, 2026-10-28; the Cursed Table app still has those two the other way round).
+  const NAMED = { 1: 1, 15: 2, 5: 3, 13: 4, 4: 5, 3: 6, 9: 7, 12: 8, 26: 9, 18: 10, 163: 11, 401: 12, 6: 13,
+    2: 14, 489: 15, 802: 16, 1203: 17 };
 
   // ── Charm generator (0x897d40) ───────────────────────────────────────────
   // Every draw steps slot 1 and uses the new value. From state s it returns the talisman and the

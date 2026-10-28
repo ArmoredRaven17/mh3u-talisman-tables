@@ -11,6 +11,13 @@ can give the talisman you're after.
 - The **T1–T17 squares** stay lit for the tables that can roll a talisman matching your filters.
   Set the filters to a few of your own talismans; the table lit every time is your save's table.
 
+## Your save
+
+Open a hunter file (`user1`, `user2` or `user3`, Wii U or 3DS) to see which table it's on. Its
+square gets a gold bar. Pick another table to download a changed copy that's on that table, then put
+it back in your save folder in place of the original (keep a backup). Only the table changes. The
+file is read and changed in your browser and never uploaded.
+
 ## How it works
 
 Your table is fixed when you start a save (see the MH3U Cursed Table app for the bug behind it).
