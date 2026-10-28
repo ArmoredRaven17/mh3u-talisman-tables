@@ -274,7 +274,7 @@
     $("saveNote").textContent = t.cursed
       ? "This save is on a cursed table: its charms can only turn into " + fmt(t.rows.length) +
         " different talismans. Move it to a normal table below."
-      : "This save is on a normal table. The game picked it when the hunter was created and never changes it.";
+      : "This save is on a normal table.";
     $("saveWarn").textContent = save.warnings.join(" ");
     show("saveWarn", save.warnings.length > 0);
     $("moveBtn").disabled = +$("moveTo").value === t.num;
@@ -316,9 +316,7 @@
     a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     save = MH3U_SAVE.open(out, name);   // the panel now describes the downloaded file
-    $("moveDone").textContent = "Downloaded " + name + ", now on T" + num + ". Put it in your save folder in place of " +
-      "the old one (keep a copy of the original). If your browser renamed it, for example to \"" + name +
-      " (1)\", rename it back to " + name + " first.";
+    $("moveDone").textContent = "Downloaded " + name + ", now on T" + num + ".";
     show("moveDone", true);
     renderSave();
   }
