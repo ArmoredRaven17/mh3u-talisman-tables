@@ -369,26 +369,9 @@
   if (!COLORS_HEX[String(savedTheme).toUpperCase()]) savedTheme = DEFAULT_THEME;
   applyTheme(savedTheme);
 
-  // Flat backdrops for chroma-keying the app on stream.
-  const BG_KEY = "mh3u-talisman-tables-bg";
-  const SOLID_BG = [["None", ""], ["Digital Blue", "#0000FF"], ["Digital Green", "#00FF00"]];
-  function applyBg(value) {
-    if (!SOLID_BG.some(([, v]) => v === value)) value = "";
-    $("content").style.background = value;
-    try { localStorage.setItem(BG_KEY, value); } catch (e) {}
-    document.querySelectorAll(".bg-thumb").forEach(t => t.classList.toggle("sel", t.dataset.value === value));
-  }
-  for (const [name, value] of SOLID_BG) {
-    const d = el("div", "bg-thumb" + (value ? "" : " none-thumb"), value ? null : name);
-    d.dataset.value = value;
-    d.title = name;
-    if (value) d.style.background = value;
-    d.addEventListener("click", () => applyBg(value));
-    $("bgGrid").appendChild(d);
-  }
-  let savedBg = "";
-  try { savedBg = localStorage.getItem(BG_KEY) || ""; } catch (e) {}
-  applyBg(savedBg);
+  // No Content Background picker: this app has no background images, so the digital (chroma-key)
+  // colours aren't needed (Raven, 2026-10-28). Drop a choice saved by an earlier version.
+  try { localStorage.removeItem("mh3u-talisman-tables-bg"); } catch (e) {}
 
   // ── Start ────────────────────────────────────────────────────────────────
   // On a phone the filters stack above the list, so they start folded away.
