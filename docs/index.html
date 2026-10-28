@@ -7,7 +7,7 @@
 <title>MH3U Talisman Tables</title>
 <link rel="icon" href="assets/MonsterIcons/MH3U-Question_Mark_Icon.png">
 <!-- Bump ?v= on any styles/data/engine/app change so browsers fetch fresh copies (no hard-refresh needed) -->
-<link rel="stylesheet" href="styles.css?v=1">
+<link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
 <div id="app">
@@ -22,11 +22,6 @@
 
   <main class="layout">
     <aside class="sidebar">
-      <div class="mode-tabs" role="tablist">
-        <button id="tabBrowse" class="btn block mode-tab sel" role="tab">Browse a Table</button>
-        <button id="tabFind" class="btn block mode-tab" role="tab">Find a Talisman</button>
-      </div>
-
       <section id="browsePanel" class="panel" data-open="true">
         <button class="panel-head">Filters <span class="chev">&#9662;</span></button>
         <div class="panel-body">
@@ -48,51 +43,25 @@
             <option value="slots">Slots</option><option value="rarity">Talisman</option>
           </select></label>
           <label class="chk"><input type="checkbox" id="fBest">Best rolls only</label>
-          <p class="hint">Best rolls only hides a talisman when the same table has one with the same skills and at least as many points and slots.</p>
+          <p class="hint">Best rolls only hides a talisman when the list has one with the same skills and at least as many points and slots.</p>
           <button id="fReset" class="btn tiny">Clear Filters</button>
         </div>
       </section>
 
-      <section id="findPanel" class="panel hidden" data-open="true">
-        <button class="panel-head">How it works <span class="chev">&#9662;</span></button>
-        <div class="panel-body">
-          <p class="hint">Enter a talisman the way the game shows it: first skill, second skill, slots.</p>
-          <p class="hint">Add every talisman you own to find your own table. Each one rules out the tables that can't give it.</p>
-          <p class="hint">Tick "or better" to find the tables that can give a talisman at least that good, with the skills in either order.</p>
-        </div>
-      </section>
     </aside>
 
     <section id="content" class="content">
       <div id="modeBrowse" class="page">
+        <div id="tableStrip" class="table-strip" aria-label="Tables that can roll a talisman matching the filters"></div>
         <div class="card" id="tableCard"></div>
-        <div class="list-head"><span id="listCount"></span><span class="hint">Click a talisman to see which tables can give it.</span></div>
+        <div class="list-head"><span id="listCount"></span></div>
         <table class="tal-table">
-          <thead><tr><th>Talisman</th><th>Skill 1</th><th>Skill 2</th><th>Slots</th><th class="col-from">From</th></tr></thead>
+          <thead><tr><th>Talisman</th><th>Skill 1</th><th>Skill 2</th><th>Slots</th><th class="col-from">From</th><th>Tables</th></tr></thead>
           <tbody id="talBody"></tbody>
         </table>
         <button id="moreBtn" class="btn more hidden">Show More</button>
       </div>
 
-      <div id="modeFind" class="page hidden">
-        <div class="card">
-          <h2>Your talismans</h2>
-          <div class="tal-row tal-row-head">
-            <span class="a-n"></span><span class="a-s1">Skill 1</span><span class="a-p1">Points</span>
-            <span class="a-s2">Skill 2</span><span class="a-p2">Points</span><span class="a-sl">Slots</span><span class="a-x"></span>
-          </div>
-          <div id="talRows" class="tal-rows"></div>
-          <div class="find-actions">
-            <button id="addRowBtn" class="btn tiny">+ Add Talisman</button>
-            <label class="chk"><input type="checkbox" id="orBetter">or better (more points or slots, skills in either order)</label>
-            <button id="clearRowsBtn" class="btn tiny">Clear</button>
-          </div>
-        </div>
-        <div class="card">
-          <p id="findVerdict" class="verdict-line"></p>
-          <div id="findGrid" class="table-grid"></div>
-        </div>
-      </div>
     </section>
   </main>
 </div>
@@ -104,11 +73,13 @@
     <p>In MH3U every save is stuck on one of 17 <strong>talisman tables</strong> from the moment you press New Game.
       Your table decides which talismans your charms can ever turn into. Twelve tables are normal. Five are
       <strong>cursed</strong> (T11, T12, T15, T16, T17) and can only give a few hundred different talismans.</p>
-    <p><strong>Browse a Table:</strong> pick a table and see every talisman it can give, and which charms give it.
-      Narrow it down by charm, skill, points and slots. <strong>Best rolls only</strong> keeps just the top versions.</p>
-    <p><strong>Find a Talisman:</strong> enter a talisman to see which tables can give it. Enter several of your own
-      talismans and only your table, or a few, will still fit. Tick <strong>or better</strong> to check whether a table
-      can give a talisman at least that good.</p>
+    <p>Pick a table to see every talisman it can give, or <strong>All tables</strong> to see every talisman in the game.
+      Each talisman lists the charms that give it and the <strong>tables</strong> it can come from. Narrow it down by
+      charm, skill, points and slots. <strong>Best rolls only</strong> keeps just the top versions.</p>
+    <p>The <strong>T1&ndash;T17 squares</strong> stay lit for the tables that can roll a talisman matching your filters
+      and go dark for the rest. Click a square to show that table, and click it again to go back to All tables.</p>
+    <p>To find your own table, set the filters to one of your talismans and note the lit squares. Do it for a few
+      talismans; the table lit every time is yours.</p>
     <p>Mystery Charms never have a second skill, and only Timeworn and Enduring Charms can have 3 slots.</p>
     <p class="muted">Theme and filters are saved in this browser.</p>
     <div class="row end gap"><button id="helpClose" class="btn">Close</button></div>
@@ -207,6 +178,6 @@
 
 <script src="data.js?v=1"></script>
 <script src="engine.js?v=1"></script>
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

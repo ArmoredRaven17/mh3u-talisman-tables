@@ -4,9 +4,11 @@ Guidance for Claude Code when working in this repository.
 
 ## What this is
 
-A static single-page lookup for MH3U talisman tables. **Browse a Table** lists every talisman a table
-can give. **Find a Talisman** shows which tables can give a talisman, or several at once (to find
-your own table), exactly or "or better".
+A static single-page lookup for MH3U talisman tables. Pick a table (or All tables) to see every
+talisman it can give. Each row lists its charms and the tables that give it. The T1–T17 squares
+above the list light up for the tables that can roll a talisman matching the filters; clicking one
+shows that table. There is no separate "find" mode: Raven folded it into the browse view on
+2026-10-28.
 
 No build step, no framework, no modules.
 - `docs/data.js` is generated; never hand-edit it.

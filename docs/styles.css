@@ -158,7 +158,7 @@ body{
 
 /* Fields */
 .field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-dim)}
-.field input,.field select,.tal-row input,.tal-row select{
+.field input,.field select{
   background:var(--input-bg);color:var(--text);border:1px solid var(--line);
   border-radius:7px;padding:7px 9px;font-size:14px;color-scheme:dark;min-width:0;
 }
@@ -181,13 +181,22 @@ body{
 .badge.cursed{background:var(--cursed)}
 .charm-counts{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;opacity:.85;margin-top:6px}
 
+/* T1-T17 squares: lit = that table can roll a matching talisman */
+.table-strip{display:grid;grid-template-columns:repeat(17,minmax(0,1fr));gap:5px}
+.tsq{aspect-ratio:1;min-width:0;border-radius:6px;border:1px solid var(--safe);cursor:pointer;padding:0;
+  background:color-mix(in srgb,var(--safe) 30%,transparent);color:var(--text);font-size:12px;font-weight:700;
+  transition:background .15s,opacity .15s}
+.tsq.cursed{border-color:var(--cursed);background:color-mix(in srgb,var(--cursed) 32%,transparent)}
+.tsq.off{background:#ffffff08;border-color:var(--line);opacity:.35}
+.tsq.sel{outline:2px solid var(--accent-hover);outline-offset:1px}
+.tsq:hover{filter:brightness(1.25)}
+
 /* Talisman list */
 .list-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;opacity:.85}
 .tal-table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
 .tal-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.6px;opacity:.7;
   font-weight:600;padding:4px 8px;border-bottom:1px solid var(--line)}
 .tal-table td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-.tal-table tbody tr{cursor:pointer}
 .tal-table tbody tr:hover{background:#ffffff10}
 .pts{font-weight:700;margin-left:4px}
 .pts.neg{color:#ff8a99}
@@ -195,31 +204,8 @@ body{
 .slots{letter-spacing:2px;white-space:nowrap}
 .rar{font-size:11px;opacity:.65;display:block}
 .from{font-size:12px;opacity:.85}
+.tables{font-size:12px;line-height:1.35;min-width:90px}
 .more{align-self:center}
-
-/* Find */
-.tal-rows{display:flex;flex-direction:column;gap:8px}
-.tal-row{display:grid;grid-template-columns:24px minmax(0,1.4fr) 64px minmax(0,1.4fr) 64px 92px 32px;gap:6px;align-items:center;
-  grid-template-areas:"n s1 p1 s2 p2 sl x"}
-.tal-row .a-n{grid-area:n}.tal-row .a-s1{grid-area:s1}.tal-row .a-p1{grid-area:p1}.tal-row .a-s2{grid-area:s2}
-.tal-row .a-p2{grid-area:p2}.tal-row .a-sl{grid-area:sl}.tal-row .a-x{grid-area:x}
-.tal-row .num{opacity:.6;text-align:center}
-.tal-row-head{font-size:11px;text-transform:uppercase;letter-spacing:.6px;opacity:.7}
-.x-btn{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:7px;height:32px;cursor:pointer}
-.x-btn:hover{background:#ffffff1a}
-.find-actions{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-top:10px}
-.verdict-line{font-size:16px;font-weight:600}
-.table-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
-.tcard{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#ffffff08;font-size:13px}
-.tcard.yes{border-color:var(--safe);background:color-mix(in srgb,var(--safe) 14%,transparent)}
-.tcard.no{opacity:.55}
-.tcard-head{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:15px;margin-bottom:4px}
-.tcard-head .tag{font-size:10px;font-weight:600;letter-spacing:.6px;color:#ff8a99}
-.tcard ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
-.tcard li{line-height:1.35}
-.ok{color:var(--safe);font-weight:700}
-.bad{color:#ff8a99;font-weight:700}
-.err{color:#ff8a99;font-size:13px}
 
 /* Narrow screens: filters stack above the list */
 @media (max-width:760px){
@@ -227,10 +213,8 @@ body{
   .sidebar{width:auto;border-bottom:1px solid var(--line);max-height:42vh}
   .panel-head{font-size:22px}
   .content{padding:14px 16px}
-  .tal-row{grid-template-columns:20px minmax(0,1fr) 60px 32px;grid-template-areas:"n s1 p1 x" ". s2 p2 ." ". sl . .";
-    padding-bottom:8px;border-bottom:1px solid var(--line)}
-  .tal-row-head{display:none}
   .tal-table .col-from{display:none}
+  .table-strip{grid-template-columns:repeat(9,minmax(0,1fr))}
   .tal-table{font-size:12px}
   .tal-table th,.tal-table td{padding:4px 4px}
   .tal-table th{font-size:10px;letter-spacing:.3px}

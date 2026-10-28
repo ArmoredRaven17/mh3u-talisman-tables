@@ -3,13 +3,13 @@
 Every talisman each of **Monster Hunter 3 Ultimate**'s 17 talisman tables can give, and which tables
 can give the talisman you're after.
 
-## Modes
+## How to use it
 
-- **Browse a Table**: pick a table and see every talisman it can give, with the charms that give
-  it. Filter by charm, skill, points and slots, or keep only the best rolls.
-- **Find a Talisman**: enter a talisman to see which tables can give it. Enter several of your own
-  and only your table, or a few, will still fit. **or better** finds tables that can give a
-  talisman at least that good.
+- Pick a table to see every talisman it can give, or **All tables** for every talisman in the game.
+  Each row lists the charms that give it and the tables it can come from.
+- Filter by charm, skill, points and slots, or keep only the best rolls.
+- The **T1–T17 squares** stay lit for the tables that can roll a talisman matching your filters.
+  Set the filters to a few of your own talismans; the table lit every time is your save's table.
 
 ## How it works
 

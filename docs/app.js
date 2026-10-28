@@ -1,6 +1,6 @@
 "use strict";
-/* MH3U Talisman Tables — all app logic (IIFE, no modules). Browse every talisman a table can give,
-   or find the tables that can give a talisman. engine.js rolls the talismans; this file is the UI. */
+/* MH3U Talisman Tables — all app logic (IIFE, no modules). Browse every talisman a table (or every
+   table) can give, with the tables each one comes from. engine.js rolls the talismans; this file is the UI. */
 (function () {
   const E = window.MH3U_TALISMAN, D = E.data;
   const $ = (id) => document.getElementById(id);
@@ -45,58 +45,70 @@
     for (const id of SKILL_IDS) sel.append(new Option(treeName(id), id));
   };
 
+  // ── Every talisman across all tables ─────────────────────────────────────
+  // ALL merges identical talismans from every table and records which tables give each one, so
+  // every row can list its tables and "All tables" can be browsed like one big table.
+  const ALL = new Map();
+  for (const t of E.TABLES) {
+    for (const r of t.rows) {
+      let a = ALL.get(r.key);
+      if (!a) {
+        a = { ...r, ways: new Array(D.charms.length).fill(0), tables: [] };
+        ALL.set(r.key, a);
+      }
+      r.ways.forEach((w, i) => (a.ways[i] += w));
+      a.tables.push(t.num);
+      r.tables = a.tables;
+    }
+  }
+  const ALL_ROWS = [...ALL.values()];
+  ALL_ROWS.forEach(a => a.tables.sort((x, y) => x - y));
+  const NORMAL = E.TABLES.filter(t => !t.cursed).map(t => t.num).sort((x, y) => x - y).join(",");
+  const tablesText = (nums) => nums.length === E.TABLES.length ? "All tables"
+    : nums.join(",") === NORMAL ? "All normal tables" : nums.map(n => "T" + n).join(", ");
+
   // ── Preferences ──────────────────────────────────────────────────────────
+  // table 0 = All tables.
   const PREFS_KEY = "mh3u-talisman-tables-prefs";
   const DEFAULT_F = { table: 1, charm: -1, skill: 0, min: "", skill2: 0, slots: 0, sort: "skill", best: false };
-  let prefs = { mode: "browse", f: { ...DEFAULT_F }, rows: [], better: false };
+  let prefs = { f: { ...DEFAULT_F } };
   try {
     const p = JSON.parse(localStorage.getItem(PREFS_KEY) || "null");
-    if (p && typeof p === "object") {
-      if (p.mode === "find") prefs.mode = "find";
-      if (p.f && typeof p.f === "object") {
-        const f = p.f, n = (v) => (Number.isInteger(v) ? v : null);
-        if (byNum[n(f.table)]) prefs.f.table = f.table;
-        if (n(f.charm) !== null && f.charm >= -1 && f.charm < D.charms.length) prefs.f.charm = f.charm;
-        if (TREE[n(f.skill)]) prefs.f.skill = f.skill;
-        if (TREE[n(f.skill2)] || f.skill2 === -1) prefs.f.skill2 = f.skill2;
-        if (n(f.min) !== null) prefs.f.min = f.min;
-        if ([0, 1, 2, 3].includes(f.slots)) prefs.f.slots = f.slots;
-        if (["skill", "points", "slots", "rarity"].includes(f.sort)) prefs.f.sort = f.sort;
-        prefs.f.best = f.best === true;
-      }
-      if (Array.isArray(p.rows)) prefs.rows = p.rows.slice(0, 20).map(cleanRow).filter(Boolean);
-      prefs.better = p.better === true;
+    if (p && typeof p === "object" && p.f && typeof p.f === "object") {
+      const f = p.f, n = (v) => (Number.isInteger(v) ? v : null);
+      if (f.table === 0 || byNum[n(f.table)]) prefs.f.table = f.table;
+      if (n(f.charm) !== null && f.charm >= -1 && f.charm < D.charms.length) prefs.f.charm = f.charm;
+      if (TREE[n(f.skill)]) prefs.f.skill = f.skill;
+      if (TREE[n(f.skill2)] || f.skill2 === -1) prefs.f.skill2 = f.skill2;
+      if (n(f.min) !== null) prefs.f.min = f.min;
+      if ([0, 1, 2, 3].includes(f.slots)) prefs.f.slots = f.slots;
+      if (["skill", "points", "slots", "rarity"].includes(f.sort)) prefs.f.sort = f.sort;
+      prefs.f.best = f.best === true;
     }
   } catch (e) {}
-  function cleanRow(r) {
-    if (!r || typeof r !== "object") return null;
-    const int = (v) => (Number.isInteger(v) && v >= -20 && v <= 20 ? v : "");
-    return { s1: TREE[r.s1] ? r.s1 : 0, p1: int(r.p1), s2: TREE[r.s2] ? r.s2 : 0, p2: int(r.p2),
-      slots: [0, 1, 2, 3].includes(r.slots) ? r.slots : 0 };
-  }
   const savePrefs = () => { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch (e) {} };
 
-  // ── Modes ────────────────────────────────────────────────────────────────
-  function setMode(m) {
-    prefs.mode = m;
-    $("tabBrowse").classList.toggle("sel", m === "browse");
-    $("tabFind").classList.toggle("sel", m === "find");
-    $("modeBrowse").classList.toggle("hidden", m !== "browse");
-    $("modeFind").classList.toggle("hidden", m !== "find");
-    $("browsePanel").classList.toggle("hidden", m !== "browse");
-    $("findPanel").classList.toggle("hidden", m !== "find");
-    savePrefs();
-    if (m === "browse") renderBrowse(); else renderFind();
-  }
-  $("tabBrowse").addEventListener("click", () => setMode("browse"));
-  $("tabFind").addEventListener("click", () => setMode("find"));
-
-  // ── Browse a Table ───────────────────────────────────────────────────────
+  // ── Browse ───────────────────────────────────────────────────────────────
+  $("fTable").append(new Option("All tables", 0));
   for (const t of E.TABLES) $("fTable").append(new Option("T" + t.num + (t.cursed ? " (cursed)" : ""), t.num));
   $("fCharm").append(new Option("All charms", -1));
   D.charms.forEach((c, i) => $("fCharm").append(new Option(c.name, i)));
   fillSkillSelect($("fSkill"), [[0, "Any skill"]]);
   fillSkillSelect($("fSkill2"), [[0, "Any"], [-1, "No second skill"]]);
+
+  // T1-T17 squares: lit when that table can roll a talisman matching the filters. Clicking one
+  // shows that table; clicking the shown one again goes back to All tables.
+  const SQUARES = {};
+  for (const t of E.TABLES) {
+    const b = el("button", "tsq" + (t.cursed ? " cursed" : ""), "T" + t.num);
+    b.addEventListener("click", () => {
+      prefs.f.table = prefs.f.table === t.num ? 0 : t.num;
+      $("fTable").value = prefs.f.table;
+      savePrefs(); shown = PAGE; renderBrowse();
+    });
+    SQUARES[t.num] = b;
+    $("tableStrip").append(b);
+  }
 
   const PAGE = 200;
   let shown = PAGE, current = [];
@@ -129,8 +141,8 @@
 
   const ptsOf = (r, id) => (r.id1 === id ? r.p1 : r.id2 === id ? r.p2 : null);
 
-  // Keep a talisman unless another one with the same two skills has at least its points and slots
-  // and beats it somewhere. Different talisman names alone don't count as better.
+  // Keep a talisman unless another one in the list with the same two skills has at least its points
+  // and slots and beats it somewhere. Different talisman names alone don't count as better.
   function bestOnly(rows) {
     const groups = new Map();
     for (const r of rows) {
@@ -163,27 +175,33 @@
     return rows.sort(cmp);
   }
 
-  function renderTableCard(t) {
+  function renderTableCard(t, rows) {
     const card = $("tableCard");
     card.replaceChildren();
-    const h = el("h2", null, "Table " + t.num);
-    h.append(el("span", "badge " + (t.cursed ? "cursed" : "safe"), t.cursed ? "CURSED" : "NORMAL"));
-    card.append(h);
-    card.append(el("p", null, t.cursed
-      ? "A cursed table: only " + fmt(t.rows.length) + " different talismans, against about 12,900 on a normal table."
-      : fmt(t.rows.length) + " different talismans can come out of the four charms on this table."));
+    if (!t) {
+      card.append(el("h2", null, "All tables"));
+      card.append(el("p", null, fmt(rows.length) + " different talismans across all 17 tables. " +
+        "The Tables column shows which tables can give each one."));
+    } else {
+      const h = el("h2", null, "Table " + t.num);
+      h.append(el("span", "badge " + (t.cursed ? "cursed" : "safe"), t.cursed ? "CURSED" : "NORMAL"));
+      card.append(h);
+      card.append(el("p", null, t.cursed
+        ? "A cursed table: only " + fmt(rows.length) + " different talismans, against about 12,900 on a normal table."
+        : fmt(rows.length) + " different talismans can come out of the four charms on this table."));
+    }
     const counts = el("div", "charm-counts");
     D.charms.forEach((c, i) => {
-      const n = t.rows.reduce((s, r) => s + (r.ways[i] ? 1 : 0), 0);
+      const n = rows.reduce((s, r) => s + (r.ways[i] ? 1 : 0), 0);
       counts.append(el("span", null, c.name + ": " + fmt(n)));
     });
     card.append(counts);
   }
 
   function renderBrowse() {
-    const f = prefs.f, t = byNum[f.table];
-    renderTableCard(t);
-    let rows = t.rows.filter(r => {
+    const f = prefs.f, t = byNum[f.table] || null;
+    renderTableCard(t, t ? t.rows : ALL_ROWS);
+    const pass = (r) => {
       if (f.charm >= 0 && !r.ways[f.charm]) return false;
       if (r.slots < f.slots) return false;
       if (f.skill) {
@@ -196,7 +214,19 @@
         if (f.skill && f.skill === f.skill2) return false;
       }
       return true;
-    });
+    };
+    // Squares look at every table, whichever one is shown. The charm filter counts per table, so
+    // a table is lit only if it gives a match from that charm.
+    const lit = new Set();
+    for (const tb of E.TABLES) {
+      if (tb.rows.some(pass)) lit.add(tb.num);
+    }
+    for (const [num, b] of Object.entries(SQUARES)) {
+      b.classList.toggle("off", !lit.has(+num));
+      b.classList.toggle("sel", +num === f.table);
+      b.title = "T" + num + (lit.has(+num) ? ": can roll a talisman matching the filters" : ": can't roll a talisman matching the filters");
+    }
+    let rows = (t ? t.rows : ALL_ROWS).filter(pass);
     if (f.best) rows = bestOnly(rows);
     current = sortRows(rows, f);
     drawRows();
@@ -210,150 +240,16 @@
       const tal = el("td");
       tal.append(el("span", null, talName(r.rarity)), el("span", "rar", "Rare " + r.rarity));
       tr.append(tal, skillCell(r.id1, r.p1), skillCell(r.id2, r.p2), el("td", "slots", slotText(r.slots)),
-        el("td", "from col-from", fromText(r)));
-      tr.title = "Which tables can give this talisman?";
-      tr.addEventListener("click", () => {
-        prefs.rows = [{ s1: r.id1, p1: r.p1, s2: r.id2, p2: r.id2 ? r.p2 : "", slots: r.slots }];
-        prefs.better = false;
-        setMode("find");
-      });
+        el("td", "from col-from", fromText(r)), el("td", "tables", tablesText(r.tables)));
       body.append(tr);
     }
     const n = current.length;
-    $("listCount").textContent = n === 0 ? "No talismans match these filters on this table."
+    $("listCount").textContent = n === 0
+      ? "No talismans match these filters" + (prefs.f.table ? " on this table." : " on any table.")
       : n > shown ? "Showing " + fmt(shown) + " of " + fmt(n) + " talismans" : fmt(n) + " talismans";
     $("moreBtn").classList.toggle("hidden", n <= shown);
   }
   $("moreBtn").addEventListener("click", () => { shown += PAGE; drawRows(); });
-
-  // ── Find a Talisman ──────────────────────────────────────────────────────
-  function rowValid(r) {
-    if (!r.s1) return false;
-    if (prefs.better) return r.p1 === "" || Number.isInteger(r.p1);
-    return Number.isInteger(r.p1) && (!r.s2 || Number.isInteger(r.p2));
-  }
-
-  // Exact: the talisman as the game shows it. Or better: both skills (either order) with at least
-  // those points, at least those slots; with no second skill entered, any second skill goes.
-  function matches(t, r) {
-    if (!prefs.better) {
-      return t.rows.filter(x => x.id1 === r.s1 && x.p1 === r.p1 && x.slots === r.slots &&
-        (r.s2 ? x.id2 === r.s2 && x.p2 === r.p2 : x.id2 === 0));
-    }
-    const need1 = r.p1 === "" ? -99 : r.p1, need2 = r.p2 === "" ? -99 : r.p2;
-    const out = t.rows.filter(x => {
-      if (x.slots < r.slots) return false;
-      const a = ptsOf(x, r.s1);
-      if (a === null || a < need1) return false;
-      if (r.s2) {
-        if (r.s2 === r.s1) return false;
-        const b = ptsOf(x, r.s2);
-        if (b === null || b < need2) return false;
-      }
-      return true;
-    });
-    const score = (x) => ptsOf(x, r.s1) + (r.s2 ? ptsOf(x, r.s2) : 0);
-    return out.sort((a, b) => score(b) - score(a) || b.slots - a.slots || b.rarity - a.rarity);
-  }
-
-  const rowText = (x) => treeName(x.id1) + " " + signed(x.p1) + (x.id2 ? ", " + treeName(x.id2) + " " + signed(x.p2) : "") +
-    "  " + slotText(x.slots);
-
-  function drawFindRows() {
-    const box = $("talRows");
-    box.replaceChildren();
-    if (!prefs.rows.length) prefs.rows.push({ s1: 0, p1: "", s2: 0, p2: "", slots: 0 });
-    prefs.rows.forEach((r, i) => {
-      const row = el("div", "tal-row");
-      const s1 = el("select", "a-s1"), s2 = el("select", "a-s2"), sl = el("select", "a-sl");
-      fillSkillSelect(s1, [[0, "Skill 1"]]);
-      fillSkillSelect(s2, [[0, prefs.better ? "(any)" : "(none)"]]);
-      // 3 slots is the most a talisman can have, so "or better" never reads "3+".
-      for (let n = 0; n <= 3; n++) sl.append(new Option((prefs.better && n && n < 3 ? n + "+ " : n + " ") + (n === 1 ? "slot" : "slots"), n));
-      const p1 = el("input", "a-p1"), p2 = el("input", "a-p2");
-      const ph = prefs.better ? "min" : "pts";
-      for (const p of [p1, p2]) { p.type = "number"; p.min = -10; p.max = 13; }
-      s1.value = r.s1; s2.value = r.s2; sl.value = r.slots; p1.value = r.p1; p2.value = r.p2;
-      lockPoints(p1, r.s1, ph); lockPoints(p2, r.s2, ph);
-      s1.setAttribute("aria-label", "Skill 1"); s2.setAttribute("aria-label", "Skill 2");
-      p1.setAttribute("aria-label", "Skill 1 points"); p2.setAttribute("aria-label", "Skill 2 points");
-      sl.setAttribute("aria-label", "Slots");
-      const read = () => {
-        const num = (v) => (v.trim() === "" || isNaN(+v) ? "" : Math.trunc(+v));
-        lockPoints(p1, +s1.value, ph); lockPoints(p2, +s2.value, ph);
-        prefs.rows[i] = { s1: +s1.value, p1: num(p1.value), s2: +s2.value, p2: num(p2.value), slots: +sl.value };
-        savePrefs();
-        renderResults();
-      };
-      [s1, s2, sl].forEach(x => x.addEventListener("change", read));
-      [p1, p2].forEach(x => x.addEventListener("input", read));
-      const x = el("button", "x-btn a-x", "✕");
-      x.title = "Remove"; x.setAttribute("aria-label", "Remove this talisman");
-      x.addEventListener("click", () => { prefs.rows.splice(i, 1); savePrefs(); renderFind(); });
-      row.append(el("span", "num a-n", String(i + 1)), s1, p1, s2, p2, sl, x);
-      box.append(row);
-    });
-  }
-
-  function renderResults() {
-    const grid = $("findGrid");
-    grid.replaceChildren();
-    const rows = prefs.rows.map((r, i) => ({ r, i })).filter(({ r }) => rowValid(r));
-    if (!rows.length) {
-      $("findVerdict").textContent = prefs.better ? "Pick a skill to start." : "Pick a skill and enter its points to start.";
-      return;
-    }
-    const fits = [];
-    for (const t of E.TABLES) {
-      const card = el("div", "tcard");
-      const head = el("div", "tcard-head");
-      head.append(el("span", null, "T" + t.num));
-      if (t.cursed) head.append(el("span", "tag", "CURSED"));
-      const ul = el("ul");
-      let all = true;
-      for (const { r, i } of rows) {
-        const m = matches(t, r);
-        const li = el("li");
-        const tag = rows.length > 1 ? "#" + (i + 1) + " " : "";
-        if (m.length) {
-          const best = m[0];
-          li.append(el("span", "ok", "✓ "), el("span", null, tag + (prefs.better
-            ? rowText(best) + (m.length > 1 ? " (" + fmt(m.length) + " fit)" : "")
-            : talName(best.rarity))));
-          li.append(el("div", "from", m.length === 1 || !prefs.better ? "From: " + fromText(best) : "Best from: " + fromText(best)));
-        } else {
-          all = false;
-          li.append(el("span", "bad", "✗ "), el("span", null, tag + "Not on this table"));
-        }
-        ul.append(li);
-      }
-      card.classList.add(all ? "yes" : "no");
-      card.append(head, ul);
-      if (all) fits.push(t);
-      grid.append(card);
-    }
-    // Tables that fit go first.
-    [...grid.children].filter(c => c.classList.contains("yes")).reverse().forEach(c => grid.prepend(c));
-    const what = (rows.length > 1 ? "all " + rows.length + " talismans" : "this talisman") + (prefs.better ? " or better" : "");
-    const names = fits.map(t => "T" + t.num).join(", ");
-    $("findVerdict").textContent = !fits.length
-      ? "No table can give " + what + ". Check the skills, points and slots against the game."
-      : fits.length === E.TABLES.length ? "Every table can give " + what + "."
-      : (fits.length === 1 ? "Only " + names + " can give " : fits.length + " tables can give ") + what +
-        (fits.length === 1 ? "." : ": " + names + ".");
-  }
-
-  function renderFind() {
-    $("orBetter").checked = prefs.better;
-    drawFindRows();
-    renderResults();
-  }
-  $("addRowBtn").addEventListener("click", () => {
-    prefs.rows.push({ s1: 0, p1: "", s2: 0, p2: "", slots: 0 });
-    savePrefs(); drawFindRows();
-  });
-  $("clearRowsBtn").addEventListener("click", () => { prefs.rows = []; savePrefs(); renderFind(); });
-  $("orBetter").addEventListener("change", () => { prefs.better = $("orBetter").checked; savePrefs(); renderFind(); });
 
   // ── Panels and modals ────────────────────────────────────────────────────
   document.querySelectorAll(".panel-head").forEach(h => h.addEventListener("click", () => {
@@ -494,5 +390,5 @@
   // On a phone the filters stack above the list, so they start folded away.
   if (window.matchMedia("(max-width:760px)").matches) document.querySelectorAll(".sidebar .panel").forEach(p => (p.dataset.open = "false"));
   syncFilterInputs();
-  setMode(prefs.mode);
+  renderBrowse();
 })();
