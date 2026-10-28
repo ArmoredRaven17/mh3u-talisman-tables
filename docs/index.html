@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>MH3U Talisman Tables</title>
+<link rel="icon" href="assets/MonsterIcons/MH3U-Question_Mark_Icon.png">
+<!-- Bump ?v= on any styles/data/engine/app change so browsers fetch fresh copies (no hard-refresh needed) -->
+<link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body>
+<div id="app">
+  <header class="titlebar titlebar-header">
+    <img id="titleIcon" class="title-icon" src="assets/MonsterIcons/MH3U-Question_Mark_Icon.png" alt="">
+    <h1>MH3U Talisman Tables</h1>
+    <button id="helpBtn" class="icon-btn" title="Help" aria-label="Help">?</button>
+    <button id="linksBtn" class="icon-btn" title="Other MH3U apps" aria-label="Other MH3U apps">&#128279;</button>
+    <button id="aboutBtn" class="icon-btn" title="About / Attributions" aria-label="About">&#9432;</button>
+    <button id="themeBtn" class="icon-btn" title="Theme" aria-label="Theme">&#9881;</button>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <div class="mode-tabs" role="tablist">
+        <button id="tabBrowse" class="btn block mode-tab sel" role="tab">Browse a Table</button>
+        <button id="tabFind" class="btn block mode-tab" role="tab">Find a Talisman</button>
+      </div>
+
+      <section id="browsePanel" class="panel" data-open="true">
+        <button class="panel-head">Filters <span class="chev">&#9662;</span></button>
+        <div class="panel-body">
+          <label class="field">Table<select id="fTable"></select></label>
+          <label class="field">Charm<select id="fCharm"></select></label>
+          <div class="field">Has skill
+            <div class="field-pair">
+              <select id="fSkill" aria-label="Has skill"></select>
+              <input id="fMin" type="number" min="-10" max="13" placeholder="min" title="At least this many points" aria-label="At least this many points">
+            </div>
+          </div>
+          <label class="field">And skill<select id="fSkill2"></select></label>
+          <label class="field">Slots<select id="fSlots">
+            <option value="0">Any</option><option value="1">1 or more</option>
+            <option value="2">2 or more</option><option value="3">3</option>
+          </select></label>
+          <label class="field">Sort by<select id="fSort">
+            <option value="skill">Skill name</option><option value="points">Points</option>
+            <option value="slots">Slots</option><option value="rarity">Talisman</option>
+          </select></label>
+          <label class="chk"><input type="checkbox" id="fBest">Best rolls only</label>
+          <p class="hint">Best rolls only hides a talisman when the same table has one with the same skills and at least as many points and slots.</p>
+          <button id="fReset" class="btn tiny">Clear Filters</button>
+        </div>
+      </section>
+
+      <section id="findPanel" class="panel hidden" data-open="true">
+        <button class="panel-head">How it works <span class="chev">&#9662;</span></button>
+        <div class="panel-body">
+          <p class="hint">Enter a talisman the way the game shows it: first skill, second skill, slots.</p>
+          <p class="hint">Add every talisman you own to find your own table. Each one rules out the tables that can't give it.</p>
+          <p class="hint">Tick "or better" to find the tables that can give a talisman at least that good, with the skills in either order.</p>
+        </div>
+      </section>
+    </aside>
+
+    <section id="content" class="content">
+      <div id="modeBrowse" class="page">
+        <div class="card" id="tableCard"></div>
+        <div class="list-head"><span id="listCount"></span><span class="hint">Click a talisman to see which tables can give it.</span></div>
+        <table class="tal-table">
+          <thead><tr><th>Talisman</th><th>Skill 1</th><th>Skill 2</th><th>Slots</th><th class="col-from">From</th></tr></thead>
+          <tbody id="talBody"></tbody>
+        </table>
+        <button id="moreBtn" class="btn more hidden">Show More</button>
+      </div>
+
+      <div id="modeFind" class="page hidden">
+        <div class="card">
+          <h2>Your talismans</h2>
+          <div class="tal-row tal-row-head">
+            <span class="a-n"></span><span class="a-s1">Skill 1</span><span class="a-p1">Points</span>
+            <span class="a-s2">Skill 2</span><span class="a-p2">Points</span><span class="a-sl">Slots</span><span class="a-x"></span>
+          </div>
+          <div id="talRows" class="tal-rows"></div>
+          <div class="find-actions">
+            <button id="addRowBtn" class="btn tiny">+ Add Talisman</button>
+            <label class="chk"><input type="checkbox" id="orBetter">or better (more points or slots, skills in either order)</label>
+            <button id="clearRowsBtn" class="btn tiny">Clear</button>
+          </div>
+        </div>
+        <div class="card">
+          <p id="findVerdict" class="verdict-line"></p>
+          <div id="findGrid" class="table-grid"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Help dialog -->
+<div id="helpModal" class="modal hidden">
+  <div class="modal-card">
+    <h2>How to use it</h2>
+    <p>In MH3U every save is stuck on one of 17 <strong>talisman tables</strong> from the moment you press New Game.
+      Your table decides which talismans your charms can ever turn into. Twelve tables are normal. Five are
+      <strong>cursed</strong> (T11, T12, T15, T16, T17) and can only give a few hundred different talismans.</p>
+    <p><strong>Browse a Table:</strong> pick a table and see every talisman it can give, and which charms give it.
+      Narrow it down by charm, skill, points and slots. <strong>Best rolls only</strong> keeps just the top versions.</p>
+    <p><strong>Find a Talisman:</strong> enter a talisman to see which tables can give it. Enter several of your own
+      talismans and only your table, or a few, will still fit. Tick <strong>or better</strong> to check whether a table
+      can give a talisman at least that good.</p>
+    <p>Mystery Charms never have a second skill, and only Timeworn and Enduring Charms can have 3 slots.</p>
+    <p class="muted">Theme and filters are saved in this browser.</p>
+    <div class="row end gap"><button id="helpClose" class="btn">Close</button></div>
+  </div>
+</div>
+
+<!-- Other MH3U apps dialog -->
+<div id="linksModal" class="modal hidden">
+  <div class="modal-card">
+    <h2>Other MH3U Apps</h2>
+    <p class="muted">For Non-MH3U Apps, you can visit the <a href="https://armoredraven17.github.io/" target="_blank" rel="noopener">Home Page</a></p>
+    <ul class="app-links">
+      <!-- every MH3U app, in the hub's order (apps.js); this app's own row is the "you are here" one -->
+      <li>
+        <a href="https://armoredraven17.github.io/mh3u-armor-skills-explained/" target="_blank" rel="noopener">Armor Skills Explained</a>
+        <span class="app-desc">Every MH3U armor skill: the game's own description, then what it actually does, with the numbers.</span>
+      </li>
+      <li>
+        <a href="https://armoredraven17.github.io/mh3u-weapon-trees/" target="_blank" rel="noopener">Weapon Trees</a>
+        <span class="app-desc">Browse every MH3U weapon upgrade tree, with full stats on any node you click.</span>
+      </li>
+      <li>
+        <a href="https://armoredraven17.github.io/mh3u-collection-tracker/" target="_blank" rel="noopener">Collection Tracker</a>
+        <span class="app-desc">Tracks which MH3U weapons and armor you own, and what it costs to finish them.</span>
+      </li>
+      <li>
+        <a href="https://armoredraven17.github.io/mh3u-hunting-log/" target="_blank" rel="noopener">Hunting Log</a>
+        <span class="app-desc">Keeps a running record of your MH3U hunts — what you were after, what you wore, who came along.</span>
+      </li>
+      <li>
+        <a href="https://armoredraven17.github.io/mh3u-quest-randomizer/" target="_blank" rel="noopener">Quest Randomizer</a>
+        <span class="app-desc">Rolls a random MH3U quest and weapon when you can't decide what to hunt.</span>
+      </li>
+      <li class="current">
+        <span class="app-name">Talisman Tables <span class="app-here">you are here</span></span>
+        <span class="app-desc">Every talisman each MH3U talisman table can give, and which tables can give the one you're after.</span>
+      </li>
+      <li>
+        <a href="https://armoredraven17.github.io/mh3u-armor-viewer/" target="_blank" rel="noopener">Armor Viewer</a>
+        <span class="app-desc">Renders a hunter in 3D with every MH3U armor piece swappable, so you can mix and match a set.</span>
+      </li>
+      <li>
+        <a href="https://armoredraven17.github.io/mh3u-armor-viewer-hd/" target="_blank" rel="noopener">Armor Viewer HD</a>
+        <span class="app-desc">The Armor Viewer with the Wii U version's models and textures.</span>
+      </li>
+      <li>
+        <a href="https://armoredraven17.github.io/mh3u-monster-viewer/" target="_blank" rel="noopener">Monster Viewer</a>
+        <span class="app-desc">Renders every MH3U monster in 3D with its own motion lists, so you can watch what they actually do.</span>
+      </li>
+      <li>
+        <a href="https://armoredraven17.github.io/mh3u-monster-viewer-hd/" target="_blank" rel="noopener">Monster Viewer HD</a>
+        <span class="app-desc">The Monster Viewer with the Wii U version's higher-resolution models and textures.</span>
+      </li>
+    </ul>
+    <div class="row end gap"><button id="linksClose" class="btn">Close</button></div>
+  </div>
+</div>
+
+<!-- About dialog -->
+<div id="aboutModal" class="modal hidden">
+  <div class="modal-card">
+    <h2>MH3U Talisman Tables</h2>
+    <p class="muted">An unofficial, non-commercial fan tool for Monster Hunter 3 Ultimate. Not affiliated with,
+      endorsed by, or supported by Capcom.</p>
+    <hr class="modal-divider">
+    <p><strong>Where the lists come from.</strong> The skill lists, point ranges, slot odds and talisman names were
+      read from the game's own code. The app then rolls every charm from every spot on every table, exactly as the
+      game does.</p>
+    <p><strong>Checked against a real save.</strong> All 258 talismans in a long-played save are on that save's
+      table, down to the slots and the talisman name.</p>
+    <p><strong>Table numbers.</strong> These are the community's numbers, matched with the 13 published New Game
+      times. Nobody published times for T12, T15, T16 and T17, so those four are numbered by convention, the same way
+      as in the MH3U Cursed Table app.</p>
+    <p class="muted">Background from the GameFAQs, Neoseeker and MH Wiki charm-table threads.</p>
+    <hr class="modal-divider">
+    <p class="muted">Monster Hunter 3 Ultimate and all of its names and icons are &copy; CAPCOM CO., LTD. Nothing from the
+      game is redistributed beyond the icons and the skill, charm and talisman names shown. The UI textures and the MHFU
+      font are shared with the same author's MH fan apps.</p>
+    <p class="muted">Built with substantial help from <a href="https://claude.com/claude-code" target="_blank" rel="noopener">Claude Code</a>,
+      Anthropic's AI coding tool, directed and reviewed by the author.</p>
+    <div class="row end gap"><button id="aboutClose" class="btn">Close</button></div>
+  </div>
+</div>
+
+<!-- Theme dialog -->
+<div id="themeModal" class="modal hidden">
+  <div class="modal-card">
+    <h2>Theme</h2>
+    <div id="swatches" class="swatches"></div>
+    <hr class="modal-divider">
+    <p class="bg-title">Content Background</p>
+    <div id="bgGrid" class="bg-grid"></div>
+    <div class="row end gap"><button id="themeClose" class="btn">Close</button></div>
+  </div>
+</div>
+
+<script src="data.js?v=1"></script>
+<script src="engine.js?v=1"></script>
+<script src="app.js?v=3"></script>
+</body>
+</html>
