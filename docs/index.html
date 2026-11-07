@@ -32,9 +32,11 @@
             <div class="save-now"><span id="saveBadge" class="badge"></span><span id="saveName"></span></div>
             <p id="saveNote" class="hint"></p>
             <p id="saveWarn" class="err hidden"></p>
-            <label class="field">Move this save to<select id="moveTo"></select></label>
-            <button id="moveBtn" class="btn tiny">Download Changed Save</button>
-            <p id="moveDone" class="hint hidden"></p>
+            <label class="field">Save Slot<select id="saveSlot"></select></label>
+            <label class="field">Console<select id="saveConsole"></select></label>
+            <label class="field">Table<select id="saveTable"></select></label>
+            <button id="saveDownload" class="btn tiny">Download Changed Save</button>
+            <p id="saveDone" class="hint hidden"></p>
           </div>
         </div>
       </section>
@@ -98,8 +100,8 @@
     <p>To find your own table, set the filters to one of your talismans and note the lit squares. Do it for a few
       talismans; the table lit every time is yours.</p>
     <p><strong>Your Save:</strong> or open your hunter file and the app tells you straight away; your table's square
-      gets a gold bar. Pick another table to download the save moved there. Only the table changes; your hunter,
-      items and talismans stay as they are.</p>
+      gets a gold bar. Change its save slot, console or table, then download the changed save. Your hunter, items
+      and talismans stay as they are.</p>
     <p>Mystery Charms never have a second skill, and only Timeworn and Enduring Charms can have 3 slots.</p>
     <p class="muted">Theme and filters are saved in this browser.</p>
     <div class="row end gap"><button id="helpClose" class="btn">Close</button></div>
@@ -206,7 +208,8 @@
 
 <script src="data.js?v=1"></script>
 <script src="engine.js?v=2"></script>
-<script src="save.js?v=2"></script>
-<script src="app.js?v=13"></script>
+<script src="convert.js?v=1"></script>
+<script src="save.js?v=4"></script>
+<script src="app.js?v=15"></script>
 </body>
 </html>

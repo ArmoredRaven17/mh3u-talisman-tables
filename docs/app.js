@@ -294,7 +294,17 @@
   // The file is read and changed here in the browser (save.js); nothing is uploaded or stored.
   let save = null;
   const show = (id, on) => $(id).classList.toggle("hidden", !on);
-  for (const t of E.TABLES) $("moveTo").append(new Option("T" + t.num + (t.cursed ? " (cursed)" : ""), t.num));
+  const CONSOLE = { wiiu: "Wii U", "3ds": "3DS" };
+  for (const n of ["user1", "user2", "user3"]) $("saveSlot").append(new Option(n, n));
+  for (const [v, label] of Object.entries(CONSOLE)) $("saveConsole").append(new Option(label, v));
+  for (const t of E.TABLES) $("saveTable").append(new Option("T" + t.num + (t.cursed ? " (cursed)" : ""), t.num));
+  const picks = () => ({ slot: $("saveSlot").value, platform: $("saveConsole").value, table: +$("saveTable").value });
+  // Back to what the opened file already is, so the download button waits for a change.
+  function resetPicks() {
+    $("saveSlot").value = save.slotName;
+    $("saveConsole").value = save.platform;
+    $("saveTable").value = save.table().num;
+  }
 
   function renderSave() {
     show("saveInfo", !!save);
@@ -304,14 +314,15 @@
     const t = save.table();
     $("saveBadge").className = "badge " + (t.cursed ? "cursed" : "safe");
     $("saveBadge").textContent = "T" + t.num;
-    $("saveName").textContent = (save.fileName || "Your save") + " · " + (save.platform === "wiiu" ? "Wii U" : "3DS");
+    $("saveName").textContent = (save.fileName || "Your save") + " · " + CONSOLE[save.platform];
     $("saveNote").textContent = t.cursed
       ? "This save is on a cursed table: its charms can only turn into " + fmt(t.rows.length) +
         " different talismans. Move it to a normal table below."
       : "This save is on a normal table.";
     $("saveWarn").textContent = save.warnings.join(" ");
     show("saveWarn", save.warnings.length > 0);
-    $("moveBtn").disabled = +$("moveTo").value === t.num;
+    const p = picks();
+    $("saveDownload").disabled = p.slot === save.slotName && p.platform === save.platform && p.table === t.num;
   }
 
   $("openSaveBtn").addEventListener("click", () => $("saveFile").click());
@@ -319,7 +330,7 @@
     const file = $("saveFile").files[0];
     $("saveFile").value = "";   // so the same file can be opened again
     if (!file) return;
-    show("moveDone", false);
+    show("saveDone", false);
     try {
       save = MH3U_SAVE.open(new Uint8Array(await file.arrayBuffer()), file.name);
       show("saveErr", false);
@@ -330,39 +341,44 @@
     }
     if (save) {
       const num = save.table().num;
-      $("moveTo").value = num;
+      resetPicks();
       prefs.f.table = num;          // show the save's own table
       $("fTable").value = num;
       savePrefs(); shown = PAGE; renderBrowse();
     }
     renderSave();
   });
-  $("moveTo").addEventListener("change", () => { show("moveDone", false); renderSave(); });
+  for (const id of ["saveSlot", "saveConsole", "saveTable"]) {
+    $(id).addEventListener("change", () => { show("saveDone", false); renderSave(); });
+  }
 
-  function downloadMoved() {
-    const num = +$("moveTo").value, name = save.fileName || "user1";
-    const out = save.movedTo(num);
+  function giveFile(bytes, name) {
     const a = el("a");
-    a.href = URL.createObjectURL(new Blob([out], { type: "application/octet-stream" }));
+    a.href = URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" }));
     a.download = name;
     document.body.append(a);
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-    save = MH3U_SAVE.open(out, name);   // the panel now describes the downloaded file
-    $("moveDone").textContent = "Downloaded " + name + ", now on T" + num + ".";
-    show("moveDone", true);
+  }
+  function downloadChanged() {
+    const p = picks(), out = save.changed(p);
+    giveFile(out, p.slot);
+    save = MH3U_SAVE.open(out, p.slot);   // the panel now describes the downloaded file
+    resetPicks();
+    $("saveDone").textContent = "Downloaded " + p.slot + " for " + CONSOLE[p.platform] + ", on T" + p.table + ".";
+    show("saveDone", true);
     renderSave();
   }
-  $("moveBtn").addEventListener("click", () => {
-    const t = byNum[+$("moveTo").value];
-    if (!save || !t) return;
-    if (!t.cursed) return downloadMoved();
+  $("saveDownload").addEventListener("click", () => {
+    if (!save) return;
+    const p = picks(), t = byNum[p.table];
+    if (p.table === save.table().num || !t.cursed) return downloadChanged();
     $("cursedText").textContent = "T" + t.num + " is a cursed table: its charms can only turn into " + fmt(t.rows.length) +
       " different talismans. Move this save there anyway?";
     show("cursedModal", true);
   });
-  $("cursedOk").addEventListener("click", () => { show("cursedModal", false); downloadMoved(); });
+  $("cursedOk").addEventListener("click", () => { show("cursedModal", false); downloadChanged(); });
 
   // ── Panels and modals ────────────────────────────────────────────────────
   document.querySelectorAll(".panel-head").forEach(h => h.addEventListener("click", () => {

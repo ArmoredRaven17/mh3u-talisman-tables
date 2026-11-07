@@ -14,9 +14,8 @@ can give the talisman you're after.
 ## Your save
 
 Open a hunter file (`user1`, `user2` or `user3`, Wii U or 3DS) to see which table it's on. Its
-square gets a gold bar. Pick another table to download a changed copy that's on that table, then put
-it back in your save folder in place of the original (keep a backup). Only the table changes. The
-file is read and changed in your browser and never uploaded.
+square gets a gold bar. Change its save slot, console or table, then **Download Changed Save**.
+The file is read and changed in your browser and never uploaded.
 
 ## How it works
 

@@ -13,13 +13,18 @@ shows that table. There is no separate "find" mode: Raven folded it into the bro
 No build step, no framework, no modules.
 - `docs/data.js` is generated; never hand-edit it.
 - `docs/engine.js` is the game's generator (no DOM).
-- `docs/save.js` reads a hunter save's table and writes a copy moved to another table (no DOM).
+- `docs/save.js` reads a hunter save's table. `changed({ slot, platform, table })` writes a copy with
+  those three choices applied (no DOM).
   It is ported from the MH3U save editor (`mh3u-editor/src/core/save.ts`, `charm.ts`):
   - Wii U files are 0x8a24 bytes, big-endian, behind a wrapper whose name key is ~crc32(file name).
   - 3DS files are 0x8a00 bytes, little-endian.
   - There is no checksum.
   - The table is RNG slot 1 at block 0x56c8. Moving a save writes all 32 seed words, as the editor does.
+  - A slot is only the file's name and the Wii U wrapper key.
   - Test it with `node C:\MH3U-Extract\talismans\check_save_js.js docs "<save folder>"`.
+- `docs/convert.js` converts a hunter between 3DS and Wii U (no DOM). It is ported from the save
+  editor's `src/core/convert.ts`, so keep `LAYOUT` in step with that copy. Check it with
+  `node C:\MH3U-Extract\talismans\check_convert.mjs`: every line should say OK.
 - `docs/app.js` is one IIFE (UI, prefs, theme).
 - `docs/styles.css` is hand-written.
 
